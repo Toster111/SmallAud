@@ -410,3 +410,110 @@ MLP
 Текст ошибки, блок со сниппетом скрыт, кнопка остаётся неактивной, пока не произойдёт изменения в выборе отслеживания.
 
 ![Fourth Slide](fourth_slide.png)
+
+### 4. API-First: Спроектируйте JSON-контракты (запрос и ответ) для 1–2 главных ручек
+
+## 4.1. Создание JS-сниппета
+
+Критический путь MVP: экран 2, сценарии 1 и 2.
+
+Request
+
+POST /api/v1/projects/prj_01HZX3K9/snippet
+
+{
+  "tracking": {
+    "pageViews": true,
+    "clicks": true,
+    "scrolls": true,
+    "errors": true
+  }
+}
+
+сценарий 1: успешное создание.
+
+{
+  "projectId": "prj_01HZX3K9",
+  "snippet": {
+    "code": "<script async src=\"https://cdn.smallaud.example/t.js\" data-key=\"pk_8f3a21c4\"></script>",
+    "projectKey": "pk_8f3a21c4",
+    "tracking": {
+      "pageViews": true,
+      "clicks": true,
+      "scrolls": true,
+      "errors": true
+    },
+    "createdAt": "2026-11-22T10:15:30Z"
+  },
+  "connection": {
+    "status": "waiting"
+  }
+}
+
+сценарий 2: не выбрано ни одного флага.
+
+{
+  "error": {
+    "code": "NO_TRACKING_SELECTED",
+    "message": "Выберите хотя бы одно событие для отслеживания",
+    "field": "tracking"
+  }
+}
+
+### 4.2. Приём событий от трекера
+
+Главная ручка сбора данных. Вызывается трекером на сайте клиента.
+
+Request
+
+POST /collect
+
+{
+  "projectKey": "pk_8f3a21c4",
+  "visitorId": "v_3b9d7e5a1c",
+  "sessionId": "s_71c0aa42",
+  "sentAt": "2026-11-22T10:20:05.120Z",
+  "events": [
+    {
+      "type": "pageview",
+      "ts": "2026-11-22T10:20:01.004Z",
+      "url": "https://site.com/"
+    },
+    {
+      "type": "click",
+      "ts": "2026-11-22T10:20:03.310Z",
+      "url": "https://site.com/",
+      "target": { "tag": "button", "text": "Регистрация", "selector": "#signup" }
+    },
+    {
+      "type": "scroll",
+      "ts": "2026-11-22T10:20:04.200Z",
+      "url": "https://site.com/",
+      "depth": 50
+    },
+    {
+      "type": "error",
+      "ts": "2026-11-22T10:20:04.900Z",
+      "url": "https://site.com/",
+      "message": "TypeError: x is undefined",
+      "source": "app.js",
+      "line": 42
+    }
+  ]
+}
+
+Ответ 202
+
+{
+  "accepted": 4,
+  "rejected": 0
+}
+
+Ответ об ошибке 403
+
+{
+  "error": {
+    "code": "INVALID_PROJECT_KEY",
+    "message": "Проект с таким ключом не найден"
+  }
+}
